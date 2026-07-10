@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
-	import { 
-		Video, 
-		VideoOff, 
-		Mic, 
-		MicOff, 
-		MonitorUp, 
-		X, 
-		Sparkles 
+	import {
+		Video,
+		VideoOff,
+		Mic,
+		MicOff,
+		MonitorUp,
+		X,
+		Sparkles,
+		Zap,
+		SwitchCamera
 	} from '@lucide/svelte';
 	import { liveConversationStore } from '$lib/stores/live-conversation.svelte';
 	import { config } from '$lib/stores/settings.svelte';
@@ -21,6 +23,7 @@
 	let isVideoMode = $state(false);
 	let isMuted = $state(false);
 	let isScreenSharing = $state(false);
+	let isTorchOn = $state(false);
 	let subtitlesText = $state('');
 
 	// Web Audio & WebSocket References
@@ -56,7 +59,7 @@
 	let audioPunch = 0;
 
 	// Helper to convert ArrayBuffer to Base64
-	function base64ArrayBuffer(arrayBuffer: ArrayBuffer): string {
+	function base64ArrayBuffer(arrayBuffer: ArrayBufferLike): string {
 		let binary = '';
 		const bytes = new Uint8Array(arrayBuffer);
 		const len = bytes.byteLength;
@@ -153,7 +156,9 @@
 	function initWebGL() {
 		if (!canvasElement) return;
 
-		gl = canvasElement.getContext('webgl') || canvasElement.getContext('experimental-webgl') as WebGLRenderingContext | null;
+		gl =
+			canvasElement.getContext('webgl') ||
+			(canvasElement.getContext('experimental-webgl') as WebGLRenderingContext | null);
 		if (!gl) {
 			console.error('WebGL is not supported in this browser.');
 			return;
@@ -372,12 +377,10 @@
 			ws.send(
 				JSON.stringify({
 					realtimeInput: {
-						mediaChunks: [
-							{
-								mimeType: 'image/jpeg',
-								data: base64Data
-							}
-						]
+						video: {
+							mimeType: 'image/jpeg',
+							data: base64Data
+						}
 					}
 				})
 			);
@@ -462,6 +465,26 @@
 		if (videoElement) {
 			videoElement.srcObject = null;
 		}
+	}
+
+	function toggleTorch() {
+		if (!videoStream) return;
+		const track = videoStream.getVideoTracks()[0];
+		if (!track) return;
+		const caps = track.getCapabilities();
+		if (!caps || !('torch' in caps)) {
+			alert('Flash/torch is not supported on this device.');
+			return;
+		}
+		track
+			.applyConstraints({ advanced: [{ torch: !isTorchOn } as MediaTrackConstraintSet] })
+			.then(() => {
+				isTorchOn = !isTorchOn;
+			})
+			.catch((err: unknown) => {
+				console.error('[LiveConversation] Torch toggle failed:', err);
+				alert('Failed to toggle flash.');
+			});
 	}
 
 	function stopScreenSharing() {
@@ -601,12 +624,10 @@
 				ws.send(
 					JSON.stringify({
 						realtimeInput: {
-							mediaChunks: [
-								{
-									mimeType: 'audio/pcm;rate=16000',
-									data: base64
-								}
-							]
+							audio: {
+								mimeType: 'audio/pcm;rate=16000',
+								data: base64
+							}
 						}
 					})
 				);
@@ -674,66 +695,97 @@
 </script>
 
 {#if isOpen}
-	<div 
+	<div
 		class="fixed inset-0 z-50 flex flex-col justify-between overflow-hidden bg-white dark:bg-black text-black dark:text-white"
 		style="padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px);"
 	>
-		<!-- Main View Stage -->
-		<div class="relative flex flex-grow items-center justify-center w-full h-full">
-			
-			<!-- Glowing WebGL Orb Section -->
-			<div 
+		<div class="relative w-full h-full" style="padding-top: env(safe-area-inset-top, 0px);">
+			<div
 				class={cn(
-					"absolute z-40 flex items-center justify-center w-[220px] h-[220px] transition-all duration-500 ease-out",
-					(isVideoMode || isScreenSharing) 
-						? "top-16 left-1/2 -translate-x-1/2 scale-[0.4]" 
-						: "top-[40%] left-1/2 -translate-y-1/2 -translate-x-1/2"
+					'absolute flex items-center justify-center w-[220px] h-[220px] transition-all duration-[600ms] [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] left-1/2 -translate-x-1/2 -translate-y-1/2',
+					isVideoMode || isScreenSharing
+						? 'top-[55px] scale-[0.35] z-50'
+						: 'top-[40%] scale-100 z-40'
 				)}
 				id="orbWrapperContainer"
 			>
-				<div 
+				<div
 					class="relative w-full h-full transition-transform duration-100 ease-out orb-glow"
 					id="orbInnerContainer"
 				>
-					<canvas bind:this={canvasElement} class="rounded-full shadow-2xl block w-full h-full"></canvas>
-					<!-- Spotlight Highlights -->
-					<div class="absolute top-[6%] left-[12%] w-[55%] h-[35%] rounded-full bg-gradient-to-br from-white/40 to-transparent blur-[6px] pointer-events-none z-20"></div>
+					<canvas bind:this={canvasElement} class="rounded-full shadow-2xl block w-full h-full"
+					></canvas>
+					<div
+						class="absolute top-[6%] left-[12%] w-[55%] h-[35%] rounded-full bg-gradient-to-br from-white/40 to-transparent blur-[6px] pointer-events-none z-20"
+					></div>
 				</div>
 			</div>
 
 			<!-- Video/Screen Feed Display Container (Only render when active to avoid text leakage behind the orb) -->
 			{#if isVideoMode || isScreenSharing}
-				<div 
-					class="absolute top-24 bottom-24 left-5 right-5 rounded-[32px] overflow-hidden bg-neutral-900 border border-white/5 opacity-100 scale-100 pointer-events-auto"
+				<div
+					class="absolute top-[110px] bottom-5 left-5 right-5 rounded-[32px] overflow-hidden bg-[#111] pointer-events-auto z-10 transition-all duration-500"
 				>
-					<!-- Video Element for Camera / Screen stream -->
-					<!-- svelte-ignore a11y_media_has_caption -->
-					<video 
-						bind:this={videoElement} 
-						class="w-full h-full object-cover filter brightness-[0.85]" 
-						autoplay 
-						playsinline 
+					<video
+						bind:this={videoElement}
+						class="w-full h-full object-cover filter brightness-[0.85]"
+						autoplay
+						playsinline
 						muted
 					></video>
-			</div>
+
+					{#if isVideoMode}
+						<div
+							class="absolute bottom-5 left-5 right-5 flex justify-between items-end pointer-events-auto z-30"
+						>
+							<button
+								class="w-10 h-10 rounded-full bg-black/40 text-white/80 flex items-center justify-center backdrop-blur-md transition-all active:scale-90 border-none"
+								onclick={toggleTorch}
+							>
+								<Zap class="h-[18px] w-[18px]" />
+							</button>
+							<button
+								class="w-10 h-10 rounded-full bg-black/40 text-white/80 flex items-center justify-center backdrop-blur-md transition-all active:scale-90 border-none"
+								onclick={async () => {
+									const currentFacing = videoStream?.getVideoTracks()[0].getSettings().facingMode;
+									const newFacing = currentFacing === 'user' ? 'environment' : 'user';
+									stopVideoStream();
+									try {
+										videoStream = await navigator.mediaDevices.getUserMedia({
+											video: { width: 640, height: 480, facingMode: newFacing }
+										});
+										isVideoMode = true;
+										await tick();
+										if (videoElement) {
+											videoElement.srcObject = videoStream;
+											videoElement.play();
+										}
+										startVideoCapturing();
+									} catch (err) {
+										console.error(err);
+									}
+								}}
+							>
+								<SwitchCamera class="h-[18px] w-[18px]" />
+							</button>
+						</div>
+					{/if}
+				</div>
 			{/if}
-
-
-
 		</div>
 
 		<!-- Action bar controls footer -->
 		<div class="flex items-center justify-center gap-6 px-6 py-8 z-50">
 			<!-- Camera Feed Button -->
-			<button 
+			<button
 				class={cn(
-					"w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md",
-					isVideoMode 
-						? "bg-neutral-900 text-white dark:bg-white dark:text-black" 
-						: "bg-neutral-100 hover:bg-neutral-200 text-black dark:bg-white/15 dark:hover:bg-white/20 dark:text-white"
+					'w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md',
+					isVideoMode
+						? 'bg-neutral-900 text-white dark:bg-white dark:text-black'
+						: 'bg-neutral-100 hover:bg-neutral-200 text-black dark:bg-white/15 dark:hover:bg-white/20 dark:text-white'
 				)}
 				onclick={toggleCamera}
-				title={isVideoMode ? "Turn off camera" : "Turn on camera"}
+				title={isVideoMode ? 'Turn off camera' : 'Turn on camera'}
 			>
 				{#if isVideoMode}
 					<VideoOff class="h-5 w-5" />
@@ -743,15 +795,15 @@
 			</button>
 
 			<!-- Microphone Mute Button -->
-			<button 
+			<button
 				class={cn(
-					"w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md",
-					isMuted 
-						? "bg-red-500 hover:bg-red-600 text-white" 
-						: "bg-neutral-900 text-white dark:bg-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-100"
+					'w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md',
+					isMuted
+						? 'bg-red-500 hover:bg-red-600 text-white'
+						: 'bg-neutral-900 text-white dark:bg-white dark:text-black hover:bg-neutral-800 dark:hover:bg-neutral-100'
 				)}
 				onclick={toggleMute}
-				title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+				title={isMuted ? 'Unmute Microphone' : 'Mute Microphone'}
 			>
 				{#if isMuted}
 					<MicOff class="h-5 w-5" />
@@ -761,21 +813,21 @@
 			</button>
 
 			<!-- Screen Share Button -->
-			<button 
+			<button
 				class={cn(
-					"w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md",
-					isScreenSharing 
-						? "bg-neutral-900 text-white dark:bg-white dark:text-black" 
-						: "bg-neutral-100 hover:bg-neutral-200 text-black dark:bg-white/15 dark:hover:bg-white/20 dark:text-white"
+					'w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md',
+					isScreenSharing
+						? 'bg-neutral-900 text-white dark:bg-white dark:text-black'
+						: 'bg-neutral-100 hover:bg-neutral-200 text-black dark:bg-white/15 dark:hover:bg-white/20 dark:text-white'
 				)}
 				onclick={toggleScreenSharing}
-				title={isScreenSharing ? "Stop sharing screen" : "Share Screen"}
+				title={isScreenSharing ? 'Stop sharing screen' : 'Share Screen'}
 			>
 				<MonitorUp class="h-5 w-5" />
 			</button>
 
 			<!-- End Session Button -->
-			<button 
+			<button
 				class="w-[58px] h-[58px] rounded-full border-none flex items-center justify-center text-lg transition-all duration-200 active:scale-90 shadow-md bg-red-600 hover:bg-red-700 text-white"
 				onclick={closeSession}
 				title="End Conversation"
@@ -789,11 +841,15 @@
 <style>
 	/* Custom premium glowing elements for WebGL sphere container */
 	.orb-glow::before {
-		content: "";
-		position: absolute; 
+		content: '';
+		position: absolute;
 		inset: -30px;
 		border-radius: 50%;
-		background: radial-gradient(circle at 50% 45%, rgba(99,102,241,var(--glow, 0.35)), rgba(99,102,241,0) 70%);
+		background: radial-gradient(
+			circle at 50% 45%,
+			rgba(99, 102, 241, var(--glow, 0.35)),
+			rgba(99, 102, 241, 0) 70%
+		);
 		filter: blur(20px);
 		z-index: 0;
 		transition: opacity 0.1s linear;
