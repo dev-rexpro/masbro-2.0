@@ -122,6 +122,8 @@
 
 	<!-- Popover Content Menu -->
 	{#if isOpen}
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="absolute bottom-11 left-0 z-50 w-[260px] rounded-xl border border-border bg-popover p-3.5 shadow-xl text-popover-foreground transition-all duration-200 animate-in fade-in slide-in-from-bottom-2 duration-150"
 			onclick={(e) => e.stopPropagation()}
@@ -148,6 +150,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle Google Search grounding"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.googleSearchGroundingEnabled
@@ -173,6 +176,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle Google Maps grounding"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.googleMapsGroundingEnabled
@@ -198,6 +202,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle Code execution"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.codeExecutionEnabled
@@ -232,6 +237,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle Structured outputs"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.structuredOutputsEnabled
@@ -266,6 +272,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle Function calling"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.functionCallingEnabled
@@ -291,6 +298,7 @@
 						</div>
 						<button
 							type="button"
+							aria-label="Toggle URL context"
 							class={cn(
 								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.urlContextEnabled

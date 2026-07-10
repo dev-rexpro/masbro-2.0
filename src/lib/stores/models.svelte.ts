@@ -9,8 +9,8 @@ import {
 	detectThinkingSupport,
 	detectThinkingSupportWithReason
 } from '$lib/utils/chat-template-thinking-detector';
-import { TTLCache, getAuthHeaders } from '$lib/utils';
-import { getProviderConfig } from '$lib/utils/api-headers';
+import { TTLCache } from '$lib/utils';
+import { getProviderConfig, getAuthHeaders } from '$lib/utils/api-headers';
 import {
 	MODEL_PROPS_CACHE_TTL_MS,
 	MODEL_PROPS_CACHE_MAX_ENTRIES,

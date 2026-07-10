@@ -3,7 +3,7 @@
 }
 
 /* Streaming code block uses .code-block-wrapper styles */
-.streaming-code-block .streaming-code-pre {
+:global(.streaming-code-block .streaming-code-pre) {
 	background: transparent;
 	padding: 0.5rem;
 	margin: 0;
@@ -259,7 +259,7 @@ div.markdown-user-content :global(.table-wrapper) {
 
 /* Scroll container for code blocks (both streaming and completed) */
 .markdown-content :global(.code-block-scroll-container),
-.streaming-code-scroll-container {
+:global(.streaming-code-scroll-container) {
 	min-height: var(--min-message-height);
 	max-height: var(--max-message-height);
 	overflow-y: auto;
@@ -273,7 +273,7 @@ div.markdown-user-content :global(.table-wrapper) {
 }
 
 .full-height-code-blocks :global(.code-block-scroll-container),
-.full-height-code-blocks .streaming-code-scroll-container {
+:global(.full-height-code-blocks .streaming-code-scroll-container) {
 	max-height: none;
 	overflow-y: visible;
 }

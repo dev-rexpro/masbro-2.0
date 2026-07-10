@@ -13,6 +13,7 @@
 	import ConsecutiveDetailsGroup from './ConsecutiveDetailsGroup.svelte';
 	import HtmlToken from './HTMLToken.svelte';
 	import ColonFenceBlock from './ColonFenceBlock.svelte';
+	import MarkdownTokens from './MarkdownTokens.svelte';
 
 	interface Props {
 		id: string;
@@ -259,7 +260,7 @@
 			<AlertRenderer {token} {alert} />
 		{:else}
 			<blockquote dir="auto">
-				<svelte:self
+				<MarkdownTokens
 					id={`${id}-${tokenIdx}`}
 					tokens={token.tokens}
 					{done}
@@ -293,7 +294,7 @@
 							/>
 						{/if}
 
-						<svelte:self
+						<MarkdownTokens
 							id={`${id}-${tokenIdx}-${itemIdx}`}
 							tokens={item.tokens}
 							top={token.loose}
@@ -328,7 +329,7 @@
 							/>
 
 							<div>
-								<svelte:self
+								<MarkdownTokens
 									id={`${id}-${tokenIdx}-${itemIdx}`}
 									tokens={item.tokens}
 									top={token.loose}
@@ -340,7 +341,7 @@
 								/>
 							</div>
 						{:else}
-							<svelte:self
+							<MarkdownTokens
 								id={`${id}-${tokenIdx}-${itemIdx}`}
 								tokens={item.tokens}
 								top={token.loose}
@@ -374,7 +375,7 @@
 									{detailToken.summary}
 								</summary>
 								<div class="mt-2 pl-4 border-l border-border">
-									<svelte:self
+									<MarkdownTokens
 										id={`${id}-${tokenIdx}-${detailIdx}-d`}
 										tokens={marked.lexer(decode(detailToken.text))}
 										attributes={detailToken?.attributes}
@@ -405,7 +406,7 @@
 					{token.summary}
 				</summary>
 				<div class="mt-2 pl-4 border-l border-border">
-					<svelte:self
+					<MarkdownTokens
 						id={`${id}-${tokenIdx}-d`}
 						tokens={marked.lexer(decode(token.text))}
 						attributes={token?.attributes}
@@ -506,7 +507,7 @@
 			{onSourceClick}
 		/>
 	{:else if token.type === 'space'}
-		<div class="my-2" />
+		<div class="my-2"></div>
 	{:else}
 		{console.log('Unknown token', token)}
 	{/if}

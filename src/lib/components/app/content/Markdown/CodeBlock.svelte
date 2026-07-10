@@ -17,6 +17,10 @@
 	let copied = $state(false);
 	let isCollapsed = $state(collapsed);
 
+	$effect(() => {
+		isCollapsed = collapsed;
+	});
+
 	const highlightedHtml = $derived.by(() => {
 		if (!code) return '';
 		try {

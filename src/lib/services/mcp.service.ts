@@ -20,7 +20,7 @@ import {
 	MCP_PARTIAL_REDACT_HEADERS,
 	CORS_PROXY_ENDPOINT
 } from '$lib/constants';
-import { getProviderConfig } from '$lib/utils/api-headers';
+import { getProviderConfig, getAuthHeaders, sanitizeHeaders } from '$lib/utils/api-headers';
 import {
 	MCPConnectionPhase,
 	MCPLogLevel,
@@ -47,8 +47,6 @@ import type {
 import {
 	buildProxiedUrl,
 	buildProxiedHeaders,
-	getAuthHeaders,
-	sanitizeHeaders,
 	throwIfAborted,
 	isAbortError,
 	createBase64DataUrl,
