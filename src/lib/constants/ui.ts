@@ -1,0 +1,30 @@
+import { Search, Settings, SquarePen } from '@lucide/svelte';
+import type { Component } from 'svelte';
+import { ROUTES } from './routes';
+
+export const FORK_TREE_DEPTH_PADDING = 8;
+export const SYSTEM_MESSAGE_PLACEHOLDER = 'System message';
+
+export const ICON_STRIP_TRANSITION_DURATION = 150;
+export const ICON_STRIP_TRANSITION_DELAY_MULTIPLIER = 50;
+
+export interface DesktopIconStripItem {
+	icon: Component;
+	tooltip: string;
+	route?: string;
+	activeRouteId?: string;
+	activeRoutePrefix?: string;
+	activeUrlIncludes?: string;
+	keys?: string[];
+}
+
+export const SIDEBAR_ACTIONS_ITEMS: DesktopIconStripItem[] = [
+	{ icon: SquarePen, tooltip: 'New chat', route: ROUTES.NEW_CHAT, keys: ['shift', 'cmd', 'o'] },
+	{ icon: Search, tooltip: 'Search', keys: ['cmd', 'k'] },
+	{
+		icon: Settings,
+		tooltip: 'Settings',
+		route: `${ROUTES.SETTINGS}/general`,
+		activeRoutePrefix: '/settings'
+	}
+];
