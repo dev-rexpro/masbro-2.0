@@ -1,5 +1,5 @@
 import { mdsvex } from 'mdsvex';
-import adapter from '@sveltejs/adapter-node';
+import adapter from '@sveltejs/adapter-vercel';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 
 const outDir = process.env.LLAMA_UI_OUT_DIR ?? './dist';
@@ -12,10 +12,7 @@ const config = {
 		paths: {
 			relative: true
 		},
-		adapter: adapter({
-			out: outDir,
-			precompress: false
-		}),
+		adapter: adapter(),
 		output: {
 			bundleStrategy: 'single'
 		},
