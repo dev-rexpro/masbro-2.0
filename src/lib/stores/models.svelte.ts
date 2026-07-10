@@ -23,274 +23,46 @@ import {
 
 import { conversationsStore } from '$lib/stores/conversations.svelte';
 
-export const GEMINI_MODELS: ModelOption[] = [
-	{
-		id: 'gemini-3.5-flash',
-		name: 'Gemini 3.5 Flash',
-		model: 'gemini-3.5-flash',
-		description: 'Fast, lightweight multimodal model for general text and multimodal tasks',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
+import modelsCapabilities from '$lib/config/models-capabilities.json';
+
+export const GEMINI_MODELS: ModelOption[] = modelsCapabilities.map((item) => {
+	const inputs = item.supported_data_types.input.map((t) => t.toLowerCase());
+	const vision = inputs.includes('image') || inputs.includes('video');
+	const audio = inputs.includes('audio') || inputs.includes('audio (speech)');
+	const video = inputs.includes('video');
+
+	const tags = ['google', 'multimodal'];
+	if (audio) tags.push('audio');
+	if (inputs.includes('pdf')) tags.push('pdf');
+	if (item.model_name.toLowerCase().includes('preview')) tags.push('preview');
+	if (item.model_name.toLowerCase().includes('lite')) tags.push('lite');
+
+	const inputLimit = typeof item.token_limits.input === 'number' ? item.token_limits.input.toLocaleString() : item.token_limits.input;
+	const outputLimit = typeof item.token_limits.output === 'number' ? item.token_limits.output.toLocaleString() : item.token_limits.output;
+
+	return {
+		id: item.id,
+		name: item.model_name,
+		model: item.id,
+		description: `${item.model_name} - Input: ${inputLimit} tokens. Output: ${outputLimit} tokens.`,
+		capabilities: ['text', ...(vision ? ['vision'] : []), ...(audio ? ['audio'] : []), ...(video ? ['video'] : [])],
+		modalities: { vision, audio, video },
 		parsedId: {
-			raw: 'gemini-3.5-flash',
+			raw: item.id,
 			orgName: 'google',
-			modelName: 'gemini-3.5-flash',
+			modelName: item.id,
 			params: null,
 			activatedParams: null,
 			quantization: null,
 			tags: []
 		},
-		aliases: ['Gemini 3.5 Flash'],
-		tags: ['google', 'multimodal', 'text']
-	},
-	{
-		id: 'gemini-3.5-live-translate-preview',
-		name: 'Gemini 3.5 Live Translate',
-		model: 'gemini-3.5-live-translate-preview',
-		description: 'Experimental live translation optimized model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-3.5-live-translate-preview',
-			orgName: 'google',
-			modelName: 'gemini-3.5-live-translate-preview',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 3.5 Live Translate'],
-		tags: ['google', 'multimodal', 'translate']
-	},
-	{
-		id: 'gemini-3.1-flash-lite',
-		name: 'Gemini 3.1 Flash-Lite',
-		model: 'gemini-3.1-flash-lite',
-		description: 'Highly cost-efficient, ultra-fast flash-lite model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-3.1-flash-lite',
-			orgName: 'google',
-			modelName: 'gemini-3.1-flash-lite',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 3.1 Flash-Lite'],
-		tags: ['google', 'multimodal', 'lite']
-	},
-	{
-		id: 'gemini-3.1-flash-live-preview',
-		name: 'Gemini 3.1 Flash Live Preview',
-		model: 'gemini-3.1-flash-live-preview',
-		description: 'Preview of low-latency real-time live interactions',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-3.1-flash-live-preview',
-			orgName: 'google',
-			modelName: 'gemini-3.1-flash-live-preview',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 3.1 Flash Live Preview'],
-		tags: ['google', 'multimodal', 'live']
-	},
-	{
-		id: 'gemini-3.1-flash-tts-preview',
-		name: 'Gemini 3.1 Flash TTS Preview',
-		model: 'gemini-3.1-flash-tts-preview',
-		description: 'Speech synthesis preview optimized multimodal model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-3.1-flash-tts-preview',
-			orgName: 'google',
-			modelName: 'gemini-3.1-flash-tts-preview',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 3.1 Flash TTS Preview'],
-		tags: ['google', 'multimodal', 'tts']
-	},
-	{
-		id: 'gemini-3-flash-preview',
-		name: 'Gemini 3 Flash Preview',
-		model: 'gemini-3-flash-preview',
-		description: 'Early preview of the Gemini 3 Flash model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-3-flash-preview',
-			orgName: 'google',
-			modelName: 'gemini-3-flash-preview',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 3 Flash Preview'],
-		tags: ['google', 'multimodal', 'preview']
-	},
-	{
-		id: 'gemini-2.5-pro',
-		name: 'Gemini 2.5 Pro',
-		model: 'gemini-2.5-pro',
-		description: 'Highly capable multimodal reasoning model for coding, math, and STEM tasks',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-pro',
-			orgName: 'google',
-			modelName: 'gemini-2.5-pro',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Pro'],
-		tags: ['google', 'multimodal', 'reasoning']
-	},
-	{
-		id: 'gemini-2.5-flash',
-		name: 'Gemini 2.5 Flash',
-		model: 'gemini-2.5-flash',
-		description: 'High-performance flash model for efficient multimodal reasoning',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-flash',
-			orgName: 'google',
-			modelName: 'gemini-2.5-flash',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Flash'],
-		tags: ['google', 'multimodal', 'text']
-	},
-	{
-		id: 'gemini-2.5-flash-lite',
-		name: 'Gemini 2.5 Flash-Lite',
-		model: 'gemini-2.5-flash-lite',
-		description: 'Lighter version of the Gemini 2.5 Flash model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-flash-lite',
-			orgName: 'google',
-			modelName: 'gemini-2.5-flash-lite',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Flash-Lite'],
-		tags: ['google', 'multimodal', 'lite']
-	},
-	{
-		id: 'gemini-2.5-flash-lite-preview-09-2025',
-		name: 'Gemini 2.5 Flash-Lite Preview',
-		model: 'gemini-2.5-flash-lite-preview-09-2025',
-		description: 'Preview release of the Gemini 2.5 Flash-Lite model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-flash-lite-preview-09-2025',
-			orgName: 'google',
-			modelName: 'gemini-2.5-flash-lite-preview-09-2025',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Flash-Lite Preview'],
-		tags: ['google', 'multimodal', 'lite-preview']
-	},
-	{
-		id: 'gemini-2.5-flash-native-audio-preview-12-2025',
-		name: 'Gemini 2.5 Flash Native Audio (Live API)',
-		model: 'gemini-2.5-flash-native-audio-preview-12-2025',
-		description: 'Low-latency streaming audio model supporting the Live API',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-flash-native-audio-preview-12-2025',
-			orgName: 'google',
-			modelName: 'gemini-2.5-flash-native-audio-preview-12-2025',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Flash Native Audio (Live API)'],
-		tags: ['google', 'multimodal', 'audio']
-	},
-	{
-		id: 'gemini-2.5-flash-preview-tts',
-		name: 'Gemini 2.5 Flash Preview TTS',
-		model: 'gemini-2.5-flash-preview-tts',
-		description: 'Text-to-speech optimized preview of the Gemini 2.5 Flash model',
-		capabilities: ['text', 'vision', 'audio', 'video'],
-		modalities: { vision: true, audio: true, video: true },
-		parsedId: {
-			raw: 'gemini-2.5-flash-preview-tts',
-			orgName: 'google',
-			modelName: 'gemini-2.5-flash-preview-tts',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini 2.5 Flash Preview TTS'],
-		tags: ['google', 'multimodal', 'tts-preview']
-	},
-	{
-		id: 'gemini-embedding-2',
-		name: 'Gemini Embedding 2',
-		model: 'gemini-embedding-2',
-		description: 'State-of-the-art text embedding model',
-		capabilities: ['text'],
-		modalities: { vision: false, audio: false, video: false },
-		parsedId: {
-			raw: 'gemini-embedding-2',
-			orgName: 'google',
-			modelName: 'gemini-embedding-2',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini Embedding 2'],
-		tags: ['google', 'embedding']
-	},
-	{
-		id: 'gemini-embedding-001',
-		name: 'Gemini Embedding',
-		model: 'gemini-embedding-001',
-		description: 'Highly robust text embedding model',
-		capabilities: ['text'],
-		modalities: { vision: false, audio: false, video: false },
-		parsedId: {
-			raw: 'gemini-embedding-001',
-			orgName: 'google',
-			modelName: 'gemini-embedding-001',
-			params: null,
-			activatedParams: null,
-			quantization: null,
-			tags: []
-		},
-		aliases: ['Gemini Embedding'],
-		tags: ['google', 'embedding']
-	}
-];
+		aliases: [item.model_name],
+		tags: tags,
+		capabilitiesSupported: item.capabilities_supported,
+		capabilitiesNotSupported: item.capabilities_not_supported,
+		tokenLimits: item.token_limits
+	};
+});
 
 /**
  * modelsStore - Reactive store for model management in both MODEL and ROUTER modes.

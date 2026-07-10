@@ -24,6 +24,7 @@
 		limitToSingleRow?: boolean;
 		// For vision modality check
 		activeModelId?: string;
+		onMcpResourcePreview?: (extra: DatabaseMessageExtraMcpResource) => void;
 	}
 
 	let {
@@ -38,7 +39,8 @@
 		imageHeight = 'h-24',
 		imageWidth = 'w-auto',
 		limitToSingleRow = false,
-		activeModelId
+		activeModelId,
+		onMcpResourcePreview
 	}: Props = $props();
 
 	let carouselRef: HorizontalScrollCarousel | undefined = $state();
@@ -76,7 +78,7 @@
 		{item}
 		{limitToSingleRow}
 		{onFileRemove}
-		onMcpResourcePreview={openMcpResourcePreview}
+		onMcpResourcePreview={onMcpResourcePreview}
 		onPreview={(i: ChatAttachmentDisplayItem, event: MouseEvent | undefined) =>
 			openPreview(i, event)}
 		{readonly}

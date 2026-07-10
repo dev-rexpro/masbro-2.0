@@ -5,8 +5,7 @@
 	import {
 		ActionIcon,
 		SidebarNavigationConversationList,
-		SidebarNavigationActions,
-		MasbroLogo
+		SidebarNavigationActions
 	} from '$lib/components/app';
 	import { ROUTES } from '$lib/constants';
 	import { fade } from 'svelte/transition';
@@ -177,19 +176,28 @@
 				onmouseenter={() => (logoHovered = true)}
 				onmouseleave={() => (logoHovered = false)}
 			>
-				<ActionIcon
-					icon={!isExpandedMode && logoHovered && innerWidth > 768 ? PanelLeftOpen : MasbroLogo}
-					size="lg"
-					iconSize={!isExpandedMode && logoHovered && innerWidth > 768
-						? 'text-muted-foreground h-4.5 w-4.5 md:h-4 md:w-4'
-						: 'text-foreground size-7 md:size-7'}
-					class="pointer-events-auto rounded-lg md:h-9 md:w-9 h-10 w-10 bg-transparent! hover:bg-foreground/5! dark:hover:bg-foreground/10!"
-					href={isExpandedMode ? ROUTES.START : undefined}
-					onclick={isExpandedMode ? undefined : toggleExpandedMode}
-					tooltip={isExpandedMode ? undefined : 'Open Sidebar'}
-					tooltipSide={TooltipSide.RIGHT}
-					ariaLabel={isExpandedMode ? 'Go to start' : 'Expand navigation'}
-				/>
+				{#if !isExpandedMode && logoHovered && innerWidth > 768}
+					<ActionIcon
+						icon={PanelLeftOpen}
+						size="lg"
+						iconSize="text-muted-foreground h-4.5 w-4.5 md:h-4 md:w-4"
+						class="pointer-events-auto rounded-lg md:h-9 md:w-9 h-10 w-10 bg-transparent! hover:bg-foreground/5! dark:hover:bg-foreground/10!"
+						onclick={toggleExpandedMode}
+						tooltip="Open Sidebar"
+						tooltipSide={TooltipSide.RIGHT}
+						ariaLabel="Expand navigation"
+					/>
+				{:else}
+					<a
+						href={isExpandedMode ? ROUTES.START : undefined}
+						onclick={isExpandedMode ? undefined : toggleExpandedMode}
+						class="pointer-events-auto flex items-center justify-center rounded-lg md:h-9 md:w-9 h-10 w-10 bg-transparent hover:bg-foreground/5 dark:hover:bg-foreground/10 transition-colors"
+						aria-label={isExpandedMode ? 'Go to start' : 'Expand navigation'}
+					>
+						<img src="/logo.svg" alt="Masbro Logo" class="size-7 md:size-7 dark:hidden" />
+						<img src="/logo-dark.svg" alt="Masbro Logo" class="size-7 md:size-7 hidden dark:block" />
+					</a>
+				{/if}
 			</div>
 
 			{#if isOnMobile || (isExpandedMode && !alwaysShowOnDesktop)}

@@ -1,0 +1,377 @@
+[
+  {
+    "id": "gemini-3.5-flash",
+    "model_name": "Gemini 3.5 Flash",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "Computer use (Preview)",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-3.5-live-translate-preview",
+    "model_name": "Gemini 3.5 Live Translate",
+    "supported_data_types": {
+      "input": ["Audio (speech)"],
+      "output": ["Audio (translated speech)", "Text (transcript)"]
+    },
+    "token_limits": {
+      "input": 131072,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Audio generation",
+      "Live API"
+    ],
+    "capabilities_not_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ]
+  },
+  {
+    "id": "gemini-3.1-flash-lite",
+    "model_name": "Gemini 3.1 Flash-Lite",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Computer use",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-3.1-flash-live-preview",
+    "model_name": "Gemini 3.1 Flash Live Preview",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Audio", "Video"],
+      "output": ["Text", "Audio"]
+    },
+    "token_limits": {
+      "input": 131072,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Audio generation",
+      "Function calling",
+      "Live API",
+      "Search grounding",
+      "Thinking"
+    ],
+    "capabilities_not_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Structured outputs",
+      "URL context"
+    ]
+  },
+  {
+    "id": "gemini-3.1-flash-tts-preview",
+    "model_name": "Gemini 3.1 Flash TTS Preview",
+    "supported_data_types": {
+      "input": ["Text"],
+      "output": ["Audio"]
+    },
+    "token_limits": {
+      "input": 8192,
+      "output": 16384
+    },
+    "capabilities_supported": [
+      "Audio generation"
+    ],
+    "capabilities_not_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Live API",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ]
+  },
+  {
+    "id": "gemini-3-flash-preview",
+    "model_name": "Gemini 3 Flash Preview",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "Computer use",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-2.5-pro",
+    "model_name": "Gemini 2.5 Pro",
+    "supported_data_types": {
+      "input": ["Audio", "Image", "Video", "Text", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-2.5-flash",
+    "model_name": "Gemini 2.5 Flash",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-2.5-flash-lite",
+    "model_name": "Gemini 2.5 Flash-Lite",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-2.5-flash-lite-preview-09-2025",
+    "model_name": "Gemini 2.5 Flash-Lite Preview",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text"]
+    },
+    "token_limits": {
+      "input": 1048576,
+      "output": 65536
+    },
+    "capabilities_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ],
+    "capabilities_not_supported": [
+      "Audio generation",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Live API"
+    ]
+  },
+  {
+    "id": "gemini-2.5-flash-native-audio-preview-12-2025",
+    "model_name": "Gemini 2.5 Flash Native Audio (Live API)",
+    "supported_data_types": {
+      "input": ["Audio", "Video", "Text"],
+      "output": ["Audio", "Text"]
+    },
+    "token_limits": {
+      "input": 131072,
+      "output": 8192
+    },
+    "capabilities_supported": [
+      "Audio generation",
+      "Function calling",
+      "Live API",
+      "Search grounding",
+      "Thinking"
+    ],
+    "capabilities_not_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Structured outputs",
+      "URL context"
+    ]
+  },
+  {
+    "id": "gemini-2.5-flash-preview-tts",
+    "model_name": "Gemini 2.5 Flash Preview TTS",
+    "supported_data_types": {
+      "input": ["Text"],
+      "output": ["Audio"]
+    },
+    "token_limits": {
+      "input": 8192,
+      "output": 16384
+    },
+    "capabilities_supported": [
+      "Audio generation"
+    ],
+    "capabilities_not_supported": [
+      "Caching",
+      "Code execution",
+      "File search",
+      "Function calling",
+      "Grounding with Google Maps",
+      "Image generation",
+      "Live API",
+      "Search grounding",
+      "Structured outputs",
+      "Thinking",
+      "URL context"
+    ]
+  },
+  {
+    "id": "gemini-embedding-2",
+    "model_name": "Gemini Embedding 2",
+    "supported_data_types": {
+      "input": ["Text", "Image", "Video", "Audio", "PDF"],
+      "output": ["Text embeddings"]
+    },
+    "token_limits": {
+      "input": 8192,
+      "output": "128 - 3072 (Dimensions)"
+    },
+    "capabilities_supported": [
+      "Primary focus on cross-modal embedding generation"
+    ],
+    "capabilities_not_supported": [
+      "Not specifically detailed in standard capabilities table"
+    ]
+  },
+  {
+    "id": "gemini-embedding-001",
+    "model_name": "Gemini Embedding (gemini-embedding-001)",
+    "supported_data_types": {
+      "input": ["Text"],
+      "output": ["Text embeddings"]
+    },
+    "token_limits": {
+      "input": 2048,
+      "output": "128 - 3072 (Dimensions)"
+    },
+    "capabilities_supported": [
+      "Primary focus on high-dimensional text embeddings"
+    ],
+    "capabilities_not_supported": [
+      "Not specifically detailed in standard capabilities table"
+    ]
+  }
+]

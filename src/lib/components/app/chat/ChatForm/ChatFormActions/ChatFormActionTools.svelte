@@ -13,6 +13,7 @@
 		Search
 	} from '@lucide/svelte';
 	import { toolsConfigStore } from '$lib/stores/tools-config.svelte';
+	import { modelsStore } from '$lib/stores/models.svelte';
 	import { Button } from '$lib/components/ui/button';
 	import { cn } from '$lib/components/ui/utils';
 
@@ -24,6 +25,45 @@
 
 	let isOpen = $state(false);
 	let menuRef = $state<HTMLElement | null>(null);
+
+	// Derived capabilities checks for selected model
+	const supportsSearchGrounding = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('Search grounding') ?? true) : true);
+	const supportsGoogleMaps = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('Grounding with Google Maps') ?? true) : true);
+	const supportsCodeExecution = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('Code execution') ?? true) : true);
+	const supportsStructuredOutputs = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('Structured outputs') ?? true) : true);
+	const supportsFunctionCalling = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('Function calling') ?? true) : true);
+	const supportsUrlContext = $derived(modelsStore.selectedModel ? (modelsStore.selectedModel.capabilitiesSupported?.includes('URL context') ?? true) : true);
+
+	// Automatically disable tools when model changes to one that doesn't support them
+	$effect(() => {
+		const model = modelsStore.selectedModel;
+		if (model && model.capabilitiesSupported) {
+			if (toolsConfigStore.googleSearchGroundingEnabled && !model.capabilitiesSupported.includes('Search grounding')) {
+				toolsConfigStore.googleSearchGroundingEnabled = false;
+				toolsConfigStore.save();
+			}
+			if (toolsConfigStore.googleMapsGroundingEnabled && !model.capabilitiesSupported.includes('Grounding with Google Maps')) {
+				toolsConfigStore.googleMapsGroundingEnabled = false;
+				toolsConfigStore.save();
+			}
+			if (toolsConfigStore.codeExecutionEnabled && !model.capabilitiesSupported.includes('Code execution')) {
+				toolsConfigStore.codeExecutionEnabled = false;
+				toolsConfigStore.save();
+			}
+			if (toolsConfigStore.structuredOutputsEnabled && !model.capabilitiesSupported.includes('Structured outputs')) {
+				toolsConfigStore.structuredOutputsEnabled = false;
+				toolsConfigStore.save();
+			}
+			if (toolsConfigStore.functionCallingEnabled && !model.capabilitiesSupported.includes('Function calling')) {
+				toolsConfigStore.functionCallingEnabled = false;
+				toolsConfigStore.save();
+			}
+			if (toolsConfigStore.urlContextEnabled && !model.capabilitiesSupported.includes('URL context')) {
+				toolsConfigStore.urlContextEnabled = false;
+				toolsConfigStore.save();
+			}
+		}
+	});
 
 	// Editing schema states
 	let editingType = $state<'structured' | 'function' | null>(null);
@@ -143,7 +183,10 @@
 
 				<div class="space-y-3">
 					<!-- Row 1: Grounding with Google Search -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsSearchGrounding && "opacity-50 select-none")}
+						title={!supportsSearchGrounding ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5">
 							<Search class="h-4 w-4 text-muted-foreground shrink-0" />
 							<span class="text-xs font-medium text-foreground">Google Search</span>
@@ -151,11 +194,13 @@
 						<button
 							type="button"
 							aria-label="Toggle Google Search grounding"
+							disabled={disabled || !supportsSearchGrounding}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.googleSearchGroundingEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsSearchGrounding ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleGoogleSearchGrounding()}
 						>
@@ -169,7 +214,10 @@
 					</div>
 
 					<!-- Row 2: Grounding with Google Maps -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsGoogleMaps && "opacity-50 select-none")}
+						title={!supportsGoogleMaps ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5">
 							<MapPin class="h-4 w-4 text-muted-foreground shrink-0" />
 							<span class="text-xs font-medium text-foreground">Google Maps</span>
@@ -177,11 +225,13 @@
 						<button
 							type="button"
 							aria-label="Toggle Google Maps grounding"
+							disabled={disabled || !supportsGoogleMaps}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.googleMapsGroundingEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsGoogleMaps ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleGoogleMapsGrounding()}
 						>
@@ -195,7 +245,10 @@
 					</div>
 
 					<!-- Row 3: Code Execution -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsCodeExecution && "opacity-50 select-none")}
+						title={!supportsCodeExecution ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5">
 							<Terminal class="h-4 w-4 text-muted-foreground shrink-0" />
 							<span class="text-xs font-medium text-foreground">Code execution</span>
@@ -203,11 +256,13 @@
 						<button
 							type="button"
 							aria-label="Toggle Code execution"
+							disabled={disabled || !supportsCodeExecution}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.codeExecutionEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsCodeExecution ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleCodeExecution()}
 						>
@@ -221,14 +276,21 @@
 					</div>
 
 					<!-- Row 4: Structured Outputs -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsStructuredOutputs && "opacity-50 select-none")}
+						title={!supportsStructuredOutputs ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5 overflow-hidden">
 							<Braces class="h-4 w-4 text-muted-foreground shrink-0" />
 							<div class="flex items-center gap-1.5 min-w-0">
 								<span class="text-xs font-medium text-foreground truncate">Structured outputs</span>
 								<button
 									type="button"
-									class="text-[10px] text-primary hover:underline shrink-0"
+									disabled={disabled || !supportsStructuredOutputs}
+									class={cn(
+										"text-[10px] text-primary hover:underline shrink-0",
+										(!supportsStructuredOutputs || disabled) && "pointer-events-none text-muted-foreground"
+									)}
 									onclick={(e) => openEdit('structured', e)}
 								>
 									Edit
@@ -238,11 +300,13 @@
 						<button
 							type="button"
 							aria-label="Toggle Structured outputs"
+							disabled={disabled || !supportsStructuredOutputs}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.structuredOutputsEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsStructuredOutputs ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleStructuredOutputs()}
 						>
@@ -256,14 +320,21 @@
 					</div>
 
 					<!-- Row 5: Function Calling -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsFunctionCalling && "opacity-50 select-none")}
+						title={!supportsFunctionCalling ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5 overflow-hidden">
 							<Wrench class="h-4 w-4 text-muted-foreground shrink-0" />
 							<div class="flex items-center gap-1.5 min-w-0">
 								<span class="text-xs font-medium text-foreground truncate">Function calling</span>
 								<button
 									type="button"
-									class="text-[10px] text-primary hover:underline shrink-0"
+									disabled={disabled || !supportsFunctionCalling}
+									class={cn(
+										"text-[10px] text-primary hover:underline shrink-0",
+										(!supportsFunctionCalling || disabled) && "pointer-events-none text-muted-foreground"
+									)}
 									onclick={(e) => openEdit('function', e)}
 								>
 									Edit
@@ -273,11 +344,13 @@
 						<button
 							type="button"
 							aria-label="Toggle Function calling"
+							disabled={disabled || !supportsFunctionCalling}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.functionCallingEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsFunctionCalling ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleFunctionCalling()}
 						>
@@ -291,7 +364,10 @@
 					</div>
 
 					<!-- Row 6: URL Context -->
-					<div class="flex items-center justify-between gap-3">
+					<div 
+						class={cn("flex items-center justify-between gap-3", !supportsUrlContext && "opacity-50 select-none")}
+						title={!supportsUrlContext ? "Not supported by the selected model" : ""}
+					>
 						<div class="flex items-center gap-2.5">
 							<Link class="h-4 w-4 text-muted-foreground shrink-0" />
 							<span class="text-xs font-medium text-foreground">URL context</span>
@@ -299,11 +375,13 @@
 						<button
 							type="button"
 							aria-label="Toggle URL context"
+							disabled={disabled || !supportsUrlContext}
 							class={cn(
-								'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
+								'relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden',
 								toolsConfigStore.urlContextEnabled
 									? 'bg-primary'
-									: 'bg-neutral-300 dark:bg-neutral-700'
+									: 'bg-neutral-300 dark:bg-neutral-700',
+								!supportsUrlContext ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
 							onclick={() => toolsConfigStore.toggleUrlContext()}
 						>

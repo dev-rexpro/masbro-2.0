@@ -18,6 +18,12 @@ export interface ModelOption {
 	parsedId?: ParsedModelId;
 	aliases?: string[];
 	tags?: string[];
+	capabilitiesSupported?: string[];
+	capabilitiesNotSupported?: string[];
+	tokenLimits?: {
+		input: number | string;
+		output: number | string;
+	};
 }
 
 /**
