@@ -7,7 +7,7 @@
 	import { untrack } from 'svelte';
 	import { onMount } from 'svelte';
 
-	import { SidebarNavigation, DialogConversationTitleUpdate } from '$lib/components/app';
+	import { SidebarNavigation, DialogConversationTitleUpdate, LiveConversation } from '$lib/components/app';
 
 	import { chatStore } from '$lib/stores/chat.svelte';
 	import { conversationsStore } from '$lib/stores/conversations.svelte';
@@ -207,6 +207,8 @@
 		onConfirm={handleTitleUpdateConfirm}
 		onCancel={handleTitleUpdateCancel}
 	/>
+
+	<LiveConversation />
 
 </Tooltip.Provider>
 

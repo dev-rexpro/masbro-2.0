@@ -222,6 +222,18 @@ const SETTINGS_REGISTRY: Record<string, SettingsSectionEntry> = {
 				type: SettingsFieldType.SELECT,
 				section: SETTINGS_SECTION_SLUGS.CONNECTIONS,
 				options: [{ value: 'google', label: 'Google Gemini', icon: Globe }]
+			},
+			{
+				key: SETTINGS_KEYS.LIVE_MODEL,
+				label: 'Live Preview Model',
+				help: 'Select the Gemini model to use for live conversation / voice mode.',
+				defaultValue: 'gemini-2.5-flash-native-audio-preview-12-2025',
+				type: SettingsFieldType.SELECT,
+				section: SETTINGS_SECTION_SLUGS.CONNECTIONS,
+				options: [
+					{ value: 'gemini-2.5-flash-native-audio-preview-12-2025', label: 'Gemini 2.5 Flash Native Audio Preview', icon: Globe },
+					{ value: 'gemini-3.1-flash-live-preview', label: 'Gemini 3.1 Flash Live Preview', icon: Globe }
+				]
 			}
 		]
 	},

@@ -150,7 +150,7 @@
 		type="button"
 		variant="ghost"
 		class={cn(
-			'h-8 w-8 rounded-full p-0 hover:bg-accent!',
+			'relative h-8 w-8 rounded-full p-0 hover:bg-accent!',
 			isOpen && 'bg-accent text-accent-foreground'
 		)}
 		onclick={toggleMenu}
@@ -158,6 +158,28 @@
 		title="Tools & Capabilities"
 	>
 		<LayoutGrid class="h-4 w-4" />
+
+		<!-- Active Tools Notification Dots -->
+		<div class="absolute -top-0.5 -right-0.5 flex -space-x-1 items-center">
+			{#if toolsConfigStore.googleSearchGroundingEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-blue-500 border border-background shadow-xs" title="Google Search active"></span>
+			{/if}
+			{#if toolsConfigStore.googleMapsGroundingEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-red-500 border border-background shadow-xs" title="Google Maps active"></span>
+			{/if}
+			{#if toolsConfigStore.codeExecutionEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-emerald-500 border border-background shadow-xs" title="Code execution active"></span>
+			{/if}
+			{#if toolsConfigStore.structuredOutputsEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-violet-500 border border-background shadow-xs" title="Structured outputs active"></span>
+			{/if}
+			{#if toolsConfigStore.functionCallingEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-amber-500 border border-background shadow-xs" title="Function calling active"></span>
+			{/if}
+			{#if toolsConfigStore.urlContextEnabled}
+				<span class="h-2.5 w-2.5 rounded-full bg-teal-500 border border-background shadow-xs" title="URL context active"></span>
+			{/if}
+		</div>
 	</Button>
 
 	<!-- Popover Content Menu -->

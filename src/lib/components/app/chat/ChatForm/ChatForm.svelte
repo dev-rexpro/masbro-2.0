@@ -30,6 +30,7 @@
 	import { mcpStore } from '$lib/stores/mcp.svelte';
 	import { mcpHasResourceAttachments } from '$lib/stores/mcp-resources.svelte';
 	import { conversationsStore, activeMessages } from '$lib/stores/conversations.svelte';
+	import { liveConversationStore } from '$lib/stores/live-conversation.svelte';
 	import type { GetPromptResult, MCPPromptInfo, MCPResourceInfo, PromptMessage } from '$lib/types';
 	import { isIMEComposing, parseClipboardContent, uuid } from '$lib/utils';
 	import {
@@ -550,6 +551,7 @@
 				onMicClick={handleMicClick}
 				{onStop}
 				onSystemPromptClick={() => onSystemPromptClick?.({ message: value, files: uploadedFiles })}
+				onVoiceModeClick={() => liveConversationStore.open()}
 			/>
 		</div>
 	</div>

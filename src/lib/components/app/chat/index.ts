@@ -651,3 +651,8 @@ export { default as ChatScreenServerError } from './ChatScreen/ChatScreenServerE
  * Renders nothing otherwise. Shown inside ChatScreen only on an active conversation route.
  */
 export { default as ChatScreenStreamResumeStatus } from './ChatScreen/ChatScreenStreamResumeStatus.svelte';
+
+/**
+ * LiveConversation - Real-time audio and video conversation modal with WebGL rendering.
+ */
+export { default as LiveConversation } from './LiveConversation/LiveConversation.svelte';
