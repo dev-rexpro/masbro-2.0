@@ -79,8 +79,28 @@ export function resolveApiUrl(path: string): string {
 		return path;
 	}
 
+	const currentConfig = config();
+	const providerMode = currentConfig[SETTINGS_KEYS.PROVIDER_MODE]?.toString();
+	const providerName = currentConfig[SETTINGS_KEYS.PROVIDER_NAME]?.toString() || 'openrouter';
+
 	const normalizedPath = path.replace(/^\.\//, '').replace(/^\/+/, '/');
-	if (normalizedPath === 'chat/completions' || normalizedPath === 'v1/chat/completions') {
+	
+	// If providerMode is openai-compatible, return direct URL
+	if (providerMode === 'openai-compatible') {
+		const providerBaseUrl = currentConfig[SETTINGS_KEYS.PROVIDER_BASE_URL]?.toString().trim();
+		if (providerBaseUrl) {
+			const cleanPath = normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
+			const target = new URL(cleanPath, providerBaseUrl.replace(/\/$/, ''));
+			return target.toString();
+		}
+	}
+
+	// Route to SvelteKit's local API completions ONLY for google/gemini providers
+	const comparePath = normalizedPath.startsWith('/') ? normalizedPath.slice(1) : normalizedPath;
+	if (
+		(providerName === 'google' || providerName === 'gemini') &&
+		(comparePath === 'chat/completions' || comparePath === 'v1/chat/completions')
+	) {
 		return `${base}/api/chat/completions`;
 	}
 
@@ -171,8 +191,15 @@ export function sanitizeHeaders(
 }
 
 export function resolveProxyApiUrl(path: string): string {
+	const currentConfig = config();
+	const providerName = currentConfig[SETTINGS_KEYS.PROVIDER_NAME]?.toString() || 'openrouter';
 	const normalized = path.replace(/^\.\//, '').replace(/^\/+/, '/');
-	if (normalized === 'chat/completions' || normalized === 'v1/chat/completions') {
+	
+	const comparePath = normalized.startsWith('/') ? normalized.slice(1) : normalized;
+	if (
+		(providerName === 'google' || providerName === 'gemini') &&
+		(comparePath === 'chat/completions' || comparePath === 'v1/chat/completions')
+	) {
 		return `${base}/api/chat/completions`;
 	}
 
