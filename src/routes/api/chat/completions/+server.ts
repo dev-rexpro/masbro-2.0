@@ -27,7 +27,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		throw error(400, 'Invalid JSON body');
 	}
 
-	const { messages, model, temperature, max_tokens, stream } = requestBody;
+	const { messages, model, temperature, max_tokens, stream, tools_config, enableThinking, reasoningEffort } = requestBody;
 	if (!messages || !Array.isArray(messages)) {
 		throw error(400, 'Missing or invalid messages array');
 	}
@@ -108,9 +108,42 @@ export const POST: RequestHandler = async ({ request }) => {
 		const config: any = {
 			systemInstruction,
 			temperature: temperature !== undefined ? temperature : 0.7,
-			maxOutputTokens: max_tokens && max_tokens > 0 ? max_tokens : undefined,
-			tools: [{ googleSearch: {} }] // Support default Google Search grounding for standard models
+			maxOutputTokens: max_tokens && max_tokens > 0 ? max_tokens : undefined
 		};
+
+		// Enable Google Search grounding dynamically based on tools_config
+		if (tools_config?.googleSearchGroundingEnabled) {
+			config.tools = [{ googleSearch: {} }];
+		}
+
+		// Configure thinking for Gemini models
+		const isGeminiModel = modelName.includes('gemini-');
+		if (isGeminiModel) {
+			const isGemini3 = modelName.includes('gemini-3');
+			if (isGemini3 && enableThinking) {
+				// Gemini 3.x uses thinkingLevel (MINIMAL, LOW, MEDIUM, HIGH)
+				const level = (reasoningEffort || 'medium').toUpperCase();
+				config.thinkingConfig = {
+					thinkingLevel: level,
+					includeThoughts: true
+				};
+			} else {
+				// Gemini 2.5 or disabled uses thinkingBudget
+				const effort = reasoningEffort || 'medium';
+				const budgetMap: Record<string, number> = {
+					minimal: 256,
+					low: 512,
+					medium: 2048,
+					high: 8192,
+					max: -1
+				};
+				const budget = enableThinking ? (budgetMap[effort] ?? 2048) : 0;
+				config.thinkingConfig = {
+					thinkingBudget: budget,
+					includeThoughts: enableThinking ? true : undefined
+				};
+			}
+		}
 
 		if (!stream) {
 			try {
@@ -126,7 +159,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				if (candidate?.content?.parts) {
 					for (const part of candidate.content.parts) {
 						if ('thought' in part && part.thought) {
-							reasoning += part.thought;
+							reasoning += part.text || '';
 						} else if (part.text) {
 							content += part.text;
 						}
@@ -134,6 +167,12 @@ export const POST: RequestHandler = async ({ request }) => {
 				} else {
 					content = response.text || '';
 				}
+
+				const usage = response.usageMetadata;
+				const timings = usage ? {
+					prompt_n: usage.promptTokenCount,
+					predicted_n: usage.candidatesTokenCount
+				} : undefined;
 
 				return new Response(
 					JSON.stringify({
@@ -146,7 +185,8 @@ export const POST: RequestHandler = async ({ request }) => {
 									reasoning_content: reasoning || undefined
 								}
 							}
-						]
+						],
+						timings
 					}),
 					{ headers: { 'Content-Type': 'application/json' } }
 				);
@@ -191,7 +231,7 @@ export const POST: RequestHandler = async ({ request }) => {
 						if (candidate?.content?.parts) {
 							for (const part of candidate.content.parts) {
 								if ('thought' in part && part.thought) {
-									reasoning += part.thought;
+									reasoning += part.text || '';
 								} else if (part.text) {
 									content += part.text;
 								}
@@ -200,7 +240,13 @@ export const POST: RequestHandler = async ({ request }) => {
 							content = chunk.text || '';
 						}
 
-						if (content || reasoning) {
+						const usage = chunk.usageMetadata;
+						const timings = usage ? {
+							prompt_n: usage.promptTokenCount,
+							predicted_n: usage.candidatesTokenCount
+						} : undefined;
+
+						if (content || reasoning || timings) {
 							sendChunk({
 								choices: [
 									{
@@ -209,7 +255,8 @@ export const POST: RequestHandler = async ({ request }) => {
 											reasoning_content: reasoning || undefined
 										}
 									}
-								]
+								],
+								timings
 							});
 						}
 					}

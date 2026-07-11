@@ -4,7 +4,7 @@
 	import * as Tooltip from '$lib/components/ui/tooltip';
 	import { ReasoningEffort, MessageRole } from '$lib/enums';
 	import { REASONING_EFFORT_TOKENS } from '$lib/constants/reasoning-effort-tokens';
-	import { REASONING_EFFORT_LEVELS } from '$lib/constants/reasoning-effort';
+	import { getReasoningLevelsForModel } from '$lib/constants/reasoning-effort';
 	import type { ReasoningEffortLevel } from '$lib/types';
 	import {
 		modelsStore,
@@ -29,15 +29,18 @@
 		chatStore.getConversationModel(activeMessages() as DatabaseMessage[])
 	);
 
+	let modelId = $derived(modelsStore.selectedModelName || conversationModel);
+	let reasoningLevels = $derived(getReasoningLevelsForModel(modelId));
+
 	// Fallback: if model props aren't available, check if any assistant messages
 	// for this model in the active conversation have reasoning content.
 	let modelSupportsThinkingFromMessages = $derived.by(() => {
-		const modelId = isRouterMode() ? modelsStore.selectedModelName || conversationModel : null;
-		if (!modelId) return false;
+		const mId = isRouterMode() ? modelsStore.selectedModelName || conversationModel : null;
+		if (!mId) return false;
 		const messages = conversationsStore.activeMessages;
 		return messages.some(
 			(m: DatabaseMessage) =>
-				m.role === MessageRole.ASSISTANT && m.model === modelId && !!m.reasoningContent
+				m.role === MessageRole.ASSISTANT && m.model === mId && !!m.reasoningContent
 		);
 	});
 
@@ -48,8 +51,8 @@
 		propsCacheVersion();
 
 		if (isRouterMode()) {
-			const modelId = modelsStore.selectedModelName || conversationModel;
-			return checkModelSupportsThinking(modelId ?? '') || modelSupportsThinkingFromMessages;
+			const mId = modelsStore.selectedModelName || conversationModel;
+			return checkModelSupportsThinking(mId ?? '') || modelSupportsThinkingFromMessages;
 		}
 
 		// In non-router mode, use the built-in supportsThinking
@@ -105,7 +108,7 @@
 		>
 			<div class="mb-2 px-2.5 text-sm font-medium">Reasoning effort</div>
 
-			{#each REASONING_EFFORT_LEVELS as level (level.value)}
+			{#each reasoningLevels as level (level.value)}
 				<button
 					type="button"
 					class="flex w-full cursor-pointer items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-accent"

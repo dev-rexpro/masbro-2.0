@@ -315,6 +315,11 @@ class ModelsStore {
 			return false;
 		}
 
+		const model = this.models.find((m) => m.id === modelId || m.model === modelId);
+		if (model?.capabilitiesSupported?.includes('Thinking')) {
+			return true;
+		}
+
 		if (isRouterMode() && !this.modelPropsCache.get(modelId)) {
 			this.fetchModelProps(modelId);
 		}
@@ -328,6 +333,11 @@ class ModelsStore {
 	 */
 	checkModelSupportsThinking(modelId: string): boolean {
 		if (!modelId) return false;
+
+		const model = this.models.find((m) => m.id === modelId || m.model === modelId);
+		if (model?.capabilitiesSupported?.includes('Thinking')) {
+			return true;
+		}
 
 		if (isRouterMode() && !this.modelPropsCache.get(modelId)) {
 			this.fetchModelProps(modelId);

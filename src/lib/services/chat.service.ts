@@ -430,6 +430,9 @@ export class ChatService {
 			if (timings_per_token !== undefined) requestBody.timings_per_token = timings_per_token;
 		}
 
+		if (enableThinking !== undefined) requestBody.enableThinking = enableThinking;
+		if (reasoningEffort !== undefined) requestBody.reasoningEffort = reasoningEffort;
+
 		// Standard params that are safe for OpenAI-compatible providers
 		if (top_p !== undefined) requestBody.top_p = top_p;
 		if (min_p !== undefined) requestBody.min_p = min_p;

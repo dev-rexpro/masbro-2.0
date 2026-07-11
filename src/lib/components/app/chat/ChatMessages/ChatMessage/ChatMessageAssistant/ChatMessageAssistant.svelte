@@ -5,7 +5,8 @@
 		ChatMessageEditForm,
 		ChatMessageStatistics,
 		ModelBadge,
-		ModelsSelectorDropdown
+		ModelsSelectorDropdown,
+		Logo
 	} from '$lib/components/app';
 	import { getMessageEditContext } from '$lib/contexts';
 	import { useProcessingState } from '$lib/hooks/use-processing-state.svelte';
@@ -25,6 +26,8 @@
 	import { isRouterMode } from '$lib/stores/server.svelte';
 	import { modelsStore } from '$lib/stores/models.svelte';
 	import { ServerModelStatus } from '$lib/enums';
+	import { conversationsStore } from '$lib/stores/conversations.svelte';
+	import { ModelsService } from '$lib/services/models.service';
 
 	import { hasAgenticContent } from '$lib/utils';
 
@@ -183,7 +186,7 @@
 			(currentConfig.alwaysShowAgenticTurns || activeStatsView === ChatMessageStatsView.SUMMARY)
 	);
 
-	let displayedModel = $derived(message.model ?? null);
+	let displayedModel = $derived(message.model || modelsStore.selectedModelName || null);
 
 	// model being switched to while it loads, so the selector bar tracks it
 	let pendingModel = $state<string | null>(null);
@@ -260,6 +263,37 @@
 			processingState.startMonitoring();
 		}
 	});
+
+	let modelParsed = $derived(displayedModel ? ModelsService.parseModelId(displayedModel) : null);
+	let cleanModelName = $derived.by(() => {
+		if (!displayedModel) return '';
+		const storeModel = modelsStore.models.find(m => m.id === displayedModel);
+		const alias = storeModel?.aliases?.[0];
+		return alias || modelParsed?.modelName || displayedModel;
+	});
+
+	function formatTimestamp(timestamp: number): string {
+		const date = new Date(timestamp);
+		const now = new Date();
+		
+		const isToday = date.toDateString() === now.toDateString();
+		
+		const yesterday = new Date(now);
+		yesterday.setDate(now.getDate() - 1);
+		const isYesterday = date.toDateString() === yesterday.toDateString();
+		
+		const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+		
+		if (isToday) {
+			return `Today at ${timeStr}`;
+		} else if (isYesterday) {
+			return `Yesterday at ${timeStr}`;
+		} else {
+			const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+			const dateStr = date.toLocaleDateString([], options);
+			return `${dateStr} at ${timeStr}`;
+		}
+	}
 </script>
 
 <div
@@ -288,86 +322,104 @@
 	{#if displayedModel}
 		<div
 			bind:this={statsContainerEl}
-			class="mb-1 inline-flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+			class="mb-3.5 flex items-center gap-3 w-full"
 		>
-			{#if isRouter}
-				<ModelsSelectorDropdown
-					currentModel={pendingModel ?? displayedModel}
-					disabled={isLoading()}
-					onModelChange={async (modelId: string, modelName: string) => {
-						const status = modelsStore.getModelStatus(modelId);
+			<!-- Brand Avatar Mark -->
+			<img src="/logo.svg" alt="Model Logo" class="size-8 shrink-0 select-none" />
 
-						if (status !== ServerModelStatus.LOADED) {
-							pendingModel = modelId;
+			<!-- Name and Metadata Details -->
+			<div class="flex flex-col min-w-0">
+					<!-- Model Title & Timestamp Metadata line inline -->
+					<div class="flex flex-wrap items-baseline gap-x-2 text-sm text-foreground select-none">
+						{#if isRouter}
+							<div class="font-semibold text-foreground">
+								<ModelsSelectorDropdown
+									currentModel={pendingModel ?? displayedModel}
+									disabled={isLoading()}
+									forceForegroundText={true}
+									class="text-sm font-semibold text-foreground!"
+									onModelChange={async (modelId: string, modelName: string) => {
+										const status = modelsStore.getModelStatus(modelId);
 
-							try {
-								await modelsStore.loadModel(modelId);
-							} finally {
-								pendingModel = null;
-							}
-						}
+										if (status !== ServerModelStatus.LOADED) {
+											pendingModel = modelId;
 
-						onRegenerate(modelName);
-						return true;
-					}}
-				/>
-			{:else}
-				<ModelBadge model={displayedModel || undefined} onclick={handleCopyModel} />
-			{/if}
+											try {
+												await modelsStore.loadModel(modelId);
+											} finally {
+												pendingModel = null;
+											}
+										}
 
-			{#if message.timestamp && !editCtx.isEditing}
-				{@const date = new Date(message.timestamp)}
-				<span class="text-muted-foreground/70"
-					>{date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span
-				>
-			{/if}
+										onRegenerate(modelName);
+										return true;
+									}}
+								/>
+							</div>
+						{:else}
+							<button 
+								type="button" 
+								onclick={handleCopyModel}
+								class="font-semibold text-foreground hover:opacity-85 transition-opacity text-left outline-none focus:underline"
+							>
+								{cleanModelName}
+							</button>
+						{/if}
 
-			{#if currentConfig.showMessageStats && message.timings}
-				{@const agentic = message.timings.agentic}
-				{@const promptTokens = agentic ? agentic.llm.prompt_n : message.timings.prompt_n}
-				{@const predictedTokens = agentic ? agentic.llm.predicted_n : message.timings.predicted_n}
-				{@const promptMs = agentic ? agentic.llm.prompt_ms : message.timings.prompt_ms}
-				{@const predictedMs = agentic ? agentic.llm.predicted_ms : message.timings.predicted_ms}
-				{@const totalTokens = (promptTokens ?? 0) + (predictedTokens ?? 0)}
-				{@const totalTime = (promptMs ?? 0) + (predictedMs ?? 0)}
-				{@const formattedTime = totalTime > 0 ? formatPerformanceTime(totalTime) : null}
+						{#if message.timestamp && !editCtx.isEditing}
+							<span class="text-xs text-muted-foreground/75 font-normal ml-0.5">{formatTimestamp(message.timestamp)}</span>
+						{/if}
 
-				{#if formattedTime}
-					<span class="text-muted-foreground/70">{formattedTime}</span>
-				{/if}
-				{#if totalTokens > 0}
-					<span class="text-muted-foreground/70">{totalTokens.toLocaleString()} tokens</span>
-				{/if}
-			{/if}
+						{#if currentConfig.showMessageStats && message.timings}
+							{@const agentic = message.timings.agentic}
+							{@const promptTokens = agentic ? agentic.llm.prompt_n : message.timings.prompt_n}
+							{@const predictedTokens = agentic ? agentic.llm.predicted_n : message.timings.predicted_n}
+							{@const totalTokens = (promptTokens ?? 0) + (predictedTokens ?? 0)}
+							
+							{#if totalTokens > 0}
+								<span class="text-xs text-muted-foreground/75 font-normal">|</span>
+								<span class="text-xs text-muted-foreground/75 font-normal">{totalTokens.toLocaleString()} Tokens</span>
+							{/if}
+						{/if}
 
-			{#if currentConfig.showMessageStats && message.timings && message.timings.predicted_n && message.timings.predicted_ms}
-				{@const agentic = message.timings.agentic}
-				<ChatMessageStatistics
-					promptTokens={agentic ? agentic.llm.prompt_n : message.timings.prompt_n}
-					promptMs={agentic ? agentic.llm.prompt_ms : message.timings.prompt_ms}
-					predictedTokens={agentic ? agentic.llm.predicted_n : message.timings.predicted_n}
-					predictedMs={agentic ? agentic.llm.predicted_ms : message.timings.predicted_ms}
-					agenticTimings={agentic}
-					onActiveViewChange={handleStatsViewChange}
-				/>
-			{:else if isLoading() && currentConfig.showMessageStats}
-				{@const liveStats = processingState.getLiveProcessingStats()}
-				{@const genStats = processingState.getLiveGenerationStats()}
-				{@const promptProgress = processingState.processingState?.promptProgress}
-				{@const isStillProcessingPrompt =
-					promptProgress && promptProgress.processed < promptProgress.total}
+						{#if currentConfig.showMessageStats && message.timings && message.timings.predicted_n && message.timings.predicted_ms}
+							{@const agentic = message.timings.agentic}
+							<span class="text-xs text-muted-foreground/75 font-normal">|</span>
+							<span class="text-xs text-muted-foreground/75 font-normal">
+								<ChatMessageStatistics
+									promptTokens={agentic ? agentic.llm.prompt_n : message.timings.prompt_n}
+									promptMs={agentic ? agentic.llm.prompt_ms : message.timings.prompt_ms}
+									predictedTokens={agentic ? agentic.llm.predicted_n : message.timings.predicted_n}
+									predictedMs={agentic ? agentic.llm.predicted_ms : message.timings.predicted_ms}
+									agenticTimings={agentic}
+									onActiveViewChange={handleStatsViewChange}
+								/>
+							</span>
+						{/if}
 
-				{#if liveStats || genStats}
-					<ChatMessageStatistics
-						isLive
-						isProcessingPrompt={!!isStillProcessingPrompt}
-						promptTokens={liveStats?.tokensProcessed}
-						promptMs={liveStats?.timeMs}
-						predictedTokens={genStats?.tokensGenerated}
-						predictedMs={genStats?.timeMs}
-					/>
-				{/if}
-			{/if}
+						{#if isLoading() && currentConfig.showMessageStats}
+							{@const liveStats = processingState.getLiveProcessingStats()}
+							{@const genStats = processingState.getLiveGenerationStats()}
+							{@const promptProgress = processingState.processingState?.promptProgress}
+							{@const isStillProcessingPrompt =
+								promptProgress && promptProgress.processed < promptProgress.total}
+
+							{#if liveStats || genStats}
+								<span class="text-xs text-muted-foreground/75 font-normal">|</span>
+								<span class="text-xs text-muted-foreground/75 font-normal">
+									<ChatMessageStatistics
+										isLive
+										isProcessingPrompt={!!isStillProcessingPrompt}
+										promptTokens={liveStats?.tokensProcessed}
+										promptMs={liveStats?.timeMs}
+										predictedTokens={genStats?.tokensGenerated}
+										predictedMs={genStats?.timeMs}
+									/>
+								</span>
+							{/if}
+						{/if}
+					</div>
+			</div>
 		</div>
 	{/if}
 

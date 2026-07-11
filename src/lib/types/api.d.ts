@@ -299,6 +299,8 @@ export interface ApiChatCompletionRequest {
 	// Continuation control (vLLM compat)
 	add_generation_prompt?: boolean;
 	continue_final_message?: boolean;
+	enableThinking?: boolean;
+	reasoningEffort?: string;
 }
 
 export interface ApiChatCompletionToolCallFunctionDelta {

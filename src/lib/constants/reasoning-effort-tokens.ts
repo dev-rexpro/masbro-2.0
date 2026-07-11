@@ -5,6 +5,7 @@ import { ReasoningEffort } from '$lib/enums';
  * Maps the ReasoningEffort enum values to concrete token counts for the server.
  */
 export const REASONING_EFFORT_TOKENS: Record<string, number> = {
+	[ReasoningEffort.MINIMAL]: 256,
 	[ReasoningEffort.LOW]: 512,
 	[ReasoningEffort.MEDIUM]: 2048,
 	[ReasoningEffort.HIGH]: 8192,
