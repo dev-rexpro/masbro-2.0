@@ -70,6 +70,27 @@
 	let tempSchemaValue = $state('');
 	let jsonError = $state<string | null>(null);
 
+	function handleToggleGoogleMapsGrounding() {
+		if (!toolsConfigStore.googleMapsGroundingEnabled) {
+			if (navigator.geolocation) {
+				navigator.geolocation.getCurrentPosition(
+					(position) => {
+						toolsConfigStore.setLocationContext({
+							latitude: position.coords.latitude,
+							longitude: position.coords.longitude
+						});
+					},
+					(err) => {
+						console.warn('Geolocation access failed or denied:', err);
+					}
+				);
+			}
+		} else {
+			toolsConfigStore.setLocationContext(null);
+		}
+		toolsConfigStore.toggleGoogleMapsGrounding();
+	}
+
 	function toggleMenu(e: MouseEvent) {
 		e.stopPropagation();
 		if (disabled) return;
@@ -255,7 +276,7 @@
 									: 'bg-neutral-300 dark:bg-neutral-700',
 								!supportsGoogleMaps ? 'cursor-not-allowed' : 'cursor-pointer'
 							)}
-							onclick={() => toolsConfigStore.toggleGoogleMapsGrounding()}
+							onclick={handleToggleGoogleMapsGrounding}
 						>
 							<span
 								class={cn(

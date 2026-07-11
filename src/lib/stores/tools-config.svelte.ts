@@ -9,6 +9,7 @@ class ToolsConfigStore {
 	googleSearchGroundingEnabled = $state(true);
 	googleMapsGroundingEnabled = $state(false);
 	urlContextEnabled = $state(false);
+	locationContext = $state<{ latitude: number; longitude: number } | null>(null);
 
 	constructor() {
 		if (browser) {
@@ -92,6 +93,10 @@ class ToolsConfigStore {
 	toggleUrlContext() {
 		this.urlContextEnabled = !this.urlContextEnabled;
 		this.save();
+	}
+
+	setLocationContext(coords: { latitude: number; longitude: number } | null) {
+		this.locationContext = coords;
 	}
 }
 

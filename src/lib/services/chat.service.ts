@@ -450,7 +450,8 @@ export class ChatService {
 			functionCallingSchema: toolsConfigStore.functionCallingSchema,
 			googleSearchGroundingEnabled: toolsConfigStore.googleSearchGroundingEnabled,
 			googleMapsGroundingEnabled: toolsConfigStore.googleMapsGroundingEnabled,
-			urlContextEnabled: toolsConfigStore.urlContextEnabled
+			urlContextEnabled: toolsConfigStore.urlContextEnabled,
+			locationContext: toolsConfigStore.locationContext
 		};
 
 		if (custom) {

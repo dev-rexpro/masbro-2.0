@@ -92,6 +92,55 @@ export const POST: RequestHandler = async ({ request }) => {
 			: systemMessage.content.map((p: any) => p.text).join('\n')
 		: undefined;
 
+	let finalSystemInstruction = systemInstruction;
+
+	if (tools_config?.urlContextEnabled) {
+		const urlRegex = /(https?:\/\/[^\s]+)/g;
+		const foundUrls: string[] = [];
+		for (const msg of messages) {
+			if (typeof msg.content === 'string') {
+				const matches = msg.content.match(urlRegex);
+				if (matches) {
+					for (const m of matches) {
+						const cleanUrl = m.replace(/[.,;:!?)]+$/, '');
+						if (!foundUrls.includes(cleanUrl)) foundUrls.push(cleanUrl);
+					}
+				}
+			}
+		}
+
+		if (foundUrls.length > 0) {
+			let scrapedBlocks = '\n\n=== URL CONTEXT REFERENCES ===';
+			for (const url of foundUrls) {
+				try {
+					const response = await fetch(url, {
+						headers: {
+							'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+						}
+					});
+					if (response.ok) {
+						const rawText = await response.text();
+						const cleanText = rawText
+							.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+							.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+							.replace(/<[^>]+>/g, ' ')
+							.replace(/\s+/g, ' ')
+							.trim()
+							.slice(0, 5000);
+						scrapedBlocks += `\nSource URL: ${url}\nContent Reference: ${cleanText}\n`;
+					} else {
+						scrapedBlocks += `\nSource URL: ${url}\n[Failed to fetch content]\n`;
+					}
+				} catch (err: any) {
+					scrapedBlocks += `\nSource URL: ${url}\n[Error: ${err.message}]\n`;
+				}
+			}
+			finalSystemInstruction = finalSystemInstruction 
+				? `${finalSystemInstruction}\n${scrapedBlocks}`
+				: scrapedBlocks;
+		}
+	}
+
 	// Filter system messages from conversation history
 	const chatContents = contents.filter((c) => c.role !== 'system');
 
@@ -106,14 +155,85 @@ export const POST: RequestHandler = async ({ request }) => {
 	// Handle standard models with generateContent (streaming or non-streaming)
 	if (!isAgent && !isOmni) {
 		const config: any = {
-			systemInstruction,
+			systemInstruction: finalSystemInstruction,
 			temperature: temperature !== undefined ? temperature : 0.7,
 			maxOutputTokens: max_tokens && max_tokens > 0 ? max_tokens : undefined
 		};
 
-		// Enable Google Search grounding dynamically based on tools_config
+		// Initialize config.tools if any tool is enabled dynamically based on tools_config
+		const enabledTools: any[] = [];
+
+		// 1. Google Search Grounding
 		if (tools_config?.googleSearchGroundingEnabled) {
-			config.tools = [{ googleSearch: {} }];
+			enabledTools.push({ googleSearch: {} });
+		}
+
+		// 2. Code Execution (Python Sandbox)
+		if (tools_config?.codeExecutionEnabled) {
+			enabledTools.push({ codeExecution: {} });
+		}
+
+		// 3. Google Maps Grounding
+		if (tools_config?.googleMapsGroundingEnabled) {
+			enabledTools.push({ googleMaps: {} });
+
+			if (tools_config.locationContext?.latitude && tools_config.locationContext?.longitude) {
+				config.toolConfig = {
+					retrievalConfig: {
+						latLng: {
+							latitude: tools_config.locationContext.latitude,
+							longitude: tools_config.locationContext.longitude
+						}
+					}
+				};
+			}
+		}
+
+		// 3. Function Calling (Custom schemas)
+		if (tools_config?.functionCallingEnabled && tools_config.functionCallingSchema) {
+			try {
+				const parsed = typeof tools_config.functionCallingSchema === 'string'
+					? JSON.parse(tools_config.functionCallingSchema)
+					: tools_config.functionCallingSchema;
+				
+				let declarations = [];
+				if (Array.isArray(parsed)) {
+					declarations = parsed.map((t: any) => {
+						if (t.type === 'function' && t.function) {
+							return t.function;
+						}
+						return t;
+					});
+				} else if (parsed.functions) {
+					declarations = parsed.functions;
+				} else if (parsed.name) {
+					declarations = [parsed];
+				}
+
+				if (declarations.length > 0) {
+					enabledTools.push({ functionDeclarations: declarations });
+				}
+			} catch (e) {
+				console.warn('Failed to parse functionCallingSchema:', e);
+			}
+		}
+
+		if (enabledTools.length > 0) {
+			config.tools = enabledTools;
+		}
+
+		// 4. Structured Outputs (JSON Schema / JSON Mode)
+		if (tools_config?.structuredOutputsEnabled) {
+			config.responseMimeType = 'application/json';
+			if (tools_config.structuredOutputsSchema) {
+				try {
+					config.responseSchema = typeof tools_config.structuredOutputsSchema === 'string'
+						? JSON.parse(tools_config.structuredOutputsSchema)
+						: tools_config.structuredOutputsSchema;
+				} catch (e) {
+					console.warn('Failed to parse structuredOutputsSchema:', e);
+				}
+			}
 		}
 
 		// Configure thinking for Gemini models
